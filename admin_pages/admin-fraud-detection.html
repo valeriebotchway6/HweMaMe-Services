@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Fraud Detection - Hw3MaMe Services</title>
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../public_pages/index.html" class="brand">Hw3MaMe Services</a>
+    <div class="nav-links">
+      <a href="../public_pages/index.html">Home</a>
+      <a href="../public_pages/about.html">About</a>
+      <a href="../public_pages/contact.html">Contact</a>
+      <a href="../public_pages/login.html">Login</a>
+      <a href="../public_pages/signup.html">Sign Up</a>
+      <a href="../worker_pages/worker-dashboard.html">Worker Dashboard</a>
+      <a href="../owner_pages/owner-dashboard.html">Owner Dashboard</a>
+      <a href="admin-dashboard.html">Admin Dashboard</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <h1>Fraud Detection</h1>
+    <p>Monitor suspicious activity and manage fraud detection workflows.</p>
+
+    <section class="section">
+      <h2>Suspicious Activities</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Activity ID</th>
+            <th>Description</th>
+            <th>User</th>
+            <th>Severity</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>FA-0001</td>
+            <td>Multiple failed login attempts from new device</td>
+            <td>admin@example.com</td>
+            <td><span class="pill pill-warning">Medium</span></td>
+            <td>
+              <button class="btn btn-secondary">Review</button>
+              <button class="btn btn-primary">Flag Account</button>
+            </td>
+          </tr>
+          <tr>
+            <td>FA-0002</td>
+            <td>Unusual contract termination activity</td>
+            <td>owner@retailbiz.com</td>
+            <td><span class="pill pill-danger">High</span></td>
+            <td>
+              <button class="btn btn-secondary">Investigate</button>
+              <button class="btn btn-primary">Suspend User</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
+
+

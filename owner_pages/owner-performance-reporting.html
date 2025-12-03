@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Owner Performance Reporting - Hw3MaMe Services</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="../supabaseClient.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../public_pages/index.html" class="brand">Hw3MaMe Services</a>
+    <div class="nav-links">
+      <a href="../public_pages/index.html">Home</a>
+      <a href="../public_pages/about.html">About</a>
+      <a href="../public_pages/contact.html">Contact</a>
+      <a href="../public_pages/login.html">Login</a>
+      <a href="../public_pages/signup.html">Sign Up</a>
+      <a href="../worker_pages/worker-dashboard.html">Worker Dashboard</a>
+      <a href="owner-dashboard.html">Owner Dashboard</a>
+      <a href="../admin_pages/admin-dashboard.html">Admin Dashboard</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <h1>Performance Reporting</h1>
+    <p>Monitor worker performance, daily reports, and overall business metrics.</p>
+
+    <section class="section">
+      <h2>Performance Summary</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Tasks Completed (This Month)</h3>
+          <p class="stat-value" id="stat-tasks">-</p>
+        </div>
+        <div class="stat-card">
+          <h3>Average Worker Rating</h3>
+          <p class="stat-value" id="stat-worker-rating">-</p>
+        </div>
+        <div class="stat-card">
+          <h3>Completed Contracts</h3>
+          <p class="stat-value" id="stat-completed-contracts">-</p>
+        </div>
+        <div class="stat-card">
+          <h3>Replacement Requests</h3>
+          <p class="stat-value" id="stat-replacements">-</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Worker Performance Table</h2>
+      <table id="performance-table">
+        <thead>
+          <tr>
+            <th>Worker</th>
+            <th>Role</th>
+            <th>Tasks Completed</th>
+            <th>Average Rating</th>
+            <th>Last Report</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Performance data will be loaded dynamically -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('../public_pages/login.html');
+      if (!user) return;
+
+      const { data: ownerProfile, error: ownerError } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (ownerError || !ownerProfile || ownerProfile.role !== 'owner') {
+        alert('You must be an owner to view this page.');
+        window.location.href = '../public_pages/login.html';
+        return;
+      }
+
+      const tasksEl = document.getElementById('stat-tasks');
+      const workerRatingEl = document.getElementById('stat-worker-rating');
+      const completedEl = document.getElementById('stat-completed-contracts');
+      const replacementsEl = document.getElementById('stat-replacements');
+      const tableBody = document.querySelector('#performance-table tbody');
+
+      const [{ data: ratings }, { data: contracts }] = await Promise.all([
+        supabaseClient.from('ratings').select('*').eq('owner_id', user.id),
+        supabaseClient.from('contracts').select('*').eq('owner_id', user.id)
+      ]);
+
+      const completedContracts = (contracts || []).filter(c => c.status === 'completed');
+      completedEl.textContent = completedContracts.length;
+      // Placeholder: count of tasks as total ratings
+      tasksEl.textContent = ratings ? ratings.length : 0;
+      replacementsEl.textContent = (contracts || []).filter(c => c.status === 'replaced').length;
+
+      if (ratings && ratings.length) {
+        const sum = ratings.reduce((acc, r) => acc + (r.score || 0), 0);
+        const avg = sum / ratings.length;
+        workerRatingEl.textContent = avg.toFixed(1) + ' / 5.0';
+      } else {
+        workerRatingEl.textContent = 'N/A';
+      }
+
+      tableBody.innerHTML = '';
+      completedContracts.forEach(c => {
+        const workerRating = ratings?.find(r => r.worker_id === c.worker_id)?.score || '-';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${c.worker_name || ''}</td>
+          <td>${c.role || ''}</td>
+          <td>${workerRating}</td>
+          <td>${c.end_date || ''}</td>
+          <td>${c.status}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    });
+  </script>
+</body>
+</html>
+
+

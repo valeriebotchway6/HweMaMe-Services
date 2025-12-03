@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "public": true,
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/public_pages/index.html"
+    }
+  ]
+}
+
+

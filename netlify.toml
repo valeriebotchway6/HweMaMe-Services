@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+  command = ""
+
+[[redirects]]
+  from = "/"
+  to = "/public_pages/index.html"
+  status = 200
+
+

@@ -1,0 +1,233 @@
+{
+    "product_name": "Hw3MaMe Services",
+    "description": "Hw3MaMe Services is a nationwide digital platform that connects individuals who have business ideas or existing small businesses—but lack time, manpower, or confidence—with vetted operators who can run those businesses for them. The platform provides verified basic and skilled operators, backed by digital contracts, trust scoring, and a secure hiring system.",
+    
+    "platforms": {
+      "website": true,
+      "mobile_app": false,
+      "admin_dashboard": true
+    },
+  
+    "target_users": {
+      "business_owners": {
+        "description": "Individuals with business ideas or small businesses who need employees or operators to run them.",
+        "needs": [
+          "Trusted operators",
+          "Time-saving operations",
+          "Secure platform with contracts",
+          "Ability to filter workers",
+          "Replacement guarantee",
+          "Daily performance reporting"
+        ]
+      },
+      "workers": {
+        "description": "Unemployed or skilled individuals seeking jobs and business operation roles.",
+        "needs": [
+          "Job opportunities",
+          "Secure platform",
+          "Verification for trust",
+          "Ability to apply for roles",
+          "Digital contracts"
+        ]
+      },
+      "admin": {
+        "description": "Internal team managing verification, fraud detection, and platform operations.",
+        "needs": [
+          "Verification tools",
+          "User management",
+          "Contract oversight",
+          "Fraud detection system",
+          "Support ticket handling"
+        ]
+      }
+    },
+  
+    "core_features": {
+      "authentication": {
+        "signup": {
+          "fields": ["name", "email", "password", "role (worker/owner)"],
+          "verification": ["email verification"],
+          "storage": "Supabase Auth + users table"
+        },
+        "login": {
+          "method": "email + password",
+          "role_redirection": {
+            "worker": "worker-dashboard.html",
+            "owner": "owner-dashboard.html"
+          }
+        }
+      },
+  
+      "user_profiles": {
+        "worker_profile": {
+          "fields": [
+            "full_name", "email", "phone_number", "location",
+            "skills", "experience", "verification_level",
+            "trust_score", "intro_video_url"
+          ]
+        },
+        "owner_profile": {
+          "fields": [
+            "full_name", "email", "phone_number",
+            "business_type", "location"
+          ]
+        }
+      },
+  
+      "verification_system": {
+        "levels": {
+          "1_identity": ["Ghana Card", "Selfie match", "Email & phone verification"],
+          "2_address": ["GPS address", "Utility bill"],
+          "3_guarantor": ["Guarantor ID", "Guarantor contact"],
+          "4_background_check": ["Police report", "Social media screening"],
+          "5_video_interview": ["30-second intro"],
+          "6_rating_system": ["Owner rates worker", "Worker rates owner"]
+        }
+      },
+  
+      "worker_listing_and_search": {
+        "owner_tools": [
+          "Search workers",
+          "Filter by skill",
+          "Filter by location",
+          "Filter by verification level",
+          "View trust score",
+          "Request interview",
+          "Hire worker",
+          "Sign contract"
+        ]
+      },
+  
+      "contracts": {
+        "digital_contracts": true,
+        "contract_fee": "GHS 20–50",
+        "fields": [
+          "Owner name",
+          "Worker name",
+          "Duration",
+          "Responsibility list",
+          "Payment agreement",
+          "Termination terms",
+          "Platform liability terms"
+        ]
+      },
+  
+      "payment_structure": {
+        "owner_pays_worker_directly": true,
+        "platform_revenue_streams": [
+          "Subscription plans (GHS 29, 49, 99 monthly)",
+          "Contract fees (GHS 20–50)",
+          "Worker verification fees (GHS 15–40)",
+          "Background check fees (GHS 60–100)",
+          "Featured listings (GHS 10–20/day)",
+          "Corporate partnerships"
+        ]
+      },
+  
+      "dashboard_features": {
+        "worker_dashboard": [
+          "View job listings",
+          "Apply for jobs",
+          "Verification progress",
+          "Rating score",
+          "Contract history"
+        ],
+        "owner_dashboard": [
+          "View workers",
+          "Search & filter",
+          "Contract management",
+          "Performance reporting",
+          "Replace worker"
+        ],
+        "admin_dashboard": [
+          "Approve worker profiles",
+          "Review verification documents",
+          "Fraud detection system",
+          "User banning & suspension",
+          "Contract oversight",
+          "Customer support tickets"
+        ]
+      }
+    },
+  
+    "database_schema": {
+      "tables": {
+        "users": {
+          "columns": {
+            "id": "uuid",
+            "name": "text",
+            "email": "text",
+            "password": "text",
+            "role": "text",
+            "phone": "text",
+            "location": "text",
+            "skills": "text[]",
+            "verification_level": "integer",
+            "trust_score": "float",
+            "created_at": "timestamp"
+          }
+        },
+        "contracts": {
+          "columns": {
+            "id": "uuid",
+            "owner_id": "uuid",
+            "worker_id": "uuid",
+            "start_date": "date",
+            "end_date": "date",
+            "role": "text",
+            "payment_terms": "text",
+            "status": "text"
+          }
+        },
+        "ratings": {
+          "columns": {
+            "id": "uuid",
+            "owner_id": "uuid",
+            "worker_id": "uuid",
+            "score": "integer",
+            "comment": "text",
+            "created_at": "timestamp"
+          }
+        }
+      }
+    },
+  
+    "pages_required": {
+      "public_pages": [
+        "index.html",
+        "login.html",
+        "signup.html",
+        "about.html",
+        "contact.html"
+      ],
+      "worker_pages": [
+        "worker-dashboard.html",
+        "worker-profile.html",
+        "worker-verification.html",
+        "worker-contracts.html"
+      ],
+      "owner_pages": [
+        "owner-dashboard.html",
+        "owner-contracts.html",
+        "owner-worker-search.html",
+        "owner-performance-reporting.html"
+      ],
+      "admin_pages": [
+        "admin-login.html",
+        "admin-dashboard.html",
+        "admin-verifications.html",
+        "admin-fraud-detection.html",
+        "admin-contracts.html",
+        "admin-users.html"
+      ]
+    },
+  
+    "technical_stack": {
+      "frontend": ["HTML", "CSS", "JavaScript", "Tailwind optional"],
+      "backend": "Supabase",
+      "database": "Supabase PostgreSQL",
+      "hosting": "Vercel or Netlify",
+      "auth": "Supabase Auth"
+    }
+  }
+  

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login - Hw3MaMe Services</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="../supabaseClient.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../public_pages/index.html" class="brand">Hw3MaMe Services</a>
+    <div class="nav-links">
+      <a href="../public_pages/index.html">Home</a>
+      <a href="../public_pages/about.html">About</a>
+      <a href="../public_pages/contact.html">Contact</a>
+      <a href="../public_pages/login.html">Login</a>
+      <a href="../public_pages/signup.html">Sign Up</a>
+      <a href="../worker_pages/worker-dashboard.html">Worker Dashboard</a>
+      <a href="../owner_pages/owner-dashboard.html">Owner Dashboard</a>
+      <a href="admin-login.html">Admin Login</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <h1>Admin Login</h1>
+    <p>Sign in to access admin tools and manage the platform.</p>
+
+    <form class="form" id="admin-login-form">
+      <div class="form-group">
+        <label for="admin-email">Email</label>
+        <input id="admin-email" type="email" placeholder="admin@example.com" />
+      </div>
+
+      <div class="form-group">
+        <label for="admin-password">Password</label>
+        <input id="admin-password" type="password" placeholder="••••••••" />
+      </div>
+
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+  </main>
+  <script>
+    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('admin-email').value.trim();
+      const password = document.getElementById('admin-password').value;
+      if (!email || !password) {
+        alert('Please enter email and password.');
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        alert('Login error: ' + error.message);
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('users')
+        .select('role')
+        .eq('email', email)
+        .single();
+
+      if (profileError || !profile || profile.role !== 'admin') {
+        alert('You are not authorized as an admin.');
+        return;
+      }
+
+      window.location.href = 'admin-dashboard.html';
+    });
+  </script>
+</body>
+</html>
+
+

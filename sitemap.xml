@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>/public_pages/index.html</loc>
+  </url>
+  <url>
+    <loc>/public_pages/about.html</loc>
+  </url>
+  <url>
+    <loc>/public_pages/contact.html</loc>
+  </url>
+  <url>
+    <loc>/public_pages/login.html</loc>
+  </url>
+  <url>
+    <loc>/public_pages/signup.html</loc>
+  </url>
+  <url>
+    <loc>/worker_pages/worker-dashboard.html</loc>
+  </url>
+  <url>
+    <loc>/owner_pages/owner-dashboard.html</loc>
+  </url>
+  <url>
+    <loc>/admin_pages/admin-dashboard.html</loc>
+  </url>
+</urlset>
+
+

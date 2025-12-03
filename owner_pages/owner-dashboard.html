@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Owner Dashboard - Hw3MaMe Services</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="../supabaseClient.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../public_pages/index.html" class="brand">Hw3MaMe Services</a>
+    <div class="nav-links">
+      <a href="../public_pages/index.html">Home</a>
+      <a href="../public_pages/about.html">About</a>
+      <a href="../public_pages/contact.html">Contact</a>
+      <a href="../public_pages/login.html">Login</a>
+      <a href="../public_pages/signup.html">Sign Up</a>
+      <a href="../worker_pages/worker-dashboard.html">Worker Dashboard</a>
+      <a href="owner-dashboard.html">Owner Dashboard</a>
+      <a href="../admin_pages/admin-dashboard.html">Admin Dashboard</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <h1>Owner Dashboard</h1>
+    <p>Browse workers, manage contracts, and monitor performance.</p>
+
+    <section class="section">
+      <h2>Overview</h2>
+      <div class="widget-grid">
+        <div class="widget-card">
+          <h3>Total Workers</h3>
+          <p class="stat-value" id="stat-total-workers">-</p>
+        </div>
+        <div class="widget-card">
+          <h3>Active Contracts</h3>
+          <p class="stat-value" id="stat-active-contracts">-</p>
+        </div>
+        <div class="widget-card">
+          <h3>Completed Contracts</h3>
+          <p class="stat-value" id="stat-completed-contracts">-</p>
+        </div>
+        <div class="widget-card">
+          <h3>Average Rating</h3>
+          <p class="stat-value" id="stat-average-rating">-</p>
+        </div>
+        <div class="widget-card">
+          <h3>Contract Status Chart</h3>
+          <div class="chart-container">
+            <canvas id="owner-contracts-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Recent Contracts</h2>
+      <div class="table-wrapper">
+      <table id="owner-contracts-table">
+        <thead>
+          <tr>
+            <th>Contract ID</th>
+            <th>Worker</th>
+            <th>Role</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Recent contracts will be loaded dynamically -->
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Your Workers</h2>
+      <div class="table-wrapper">
+      <table id="owner-workers-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Verification Level</th>
+            <th>Trust Score</th>
+            <th>Average Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Workers will be loaded dynamically -->
+        </tbody>
+      </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    let ownerContractsChart;
+
+    async function loadOwnerDashboardData(ownerId) {
+      const totalWorkersEl = document.getElementById('stat-total-workers');
+      const activeContractsEl = document.getElementById('stat-active-contracts');
+      const completedContractsEl = document.getElementById('stat-completed-contracts');
+      const avgRatingEl = document.getElementById('stat-average-rating');
+      const contractsTableBody = document.querySelector('#owner-contracts-table tbody');
+      const workersTableBody = document.querySelector('#owner-workers-table tbody');
+
+      const [{ data: workers }, { data: contracts }, { data: ratings }] = await Promise.all([
+        supabaseClient.from('users').select('*').eq('role', 'worker'),
+        supabaseClient.from('contracts').select('*').eq('owner_id', ownerId),
+        supabaseClient.from('ratings').select('*')
+      ]);
+
+      if (workers) totalWorkersEl.textContent = workers.length;
+      if (contracts) {
+        const active = contracts.filter(c => c.status === 'active');
+        const completed = contracts.filter(c => c.status === 'completed');
+        const pending = contracts.filter(c => c.status === 'pending');
+        const terminated = contracts.filter(c => c.status === 'terminated');
+        activeContractsEl.textContent = active.length;
+        completedContractsEl.textContent = completed.length;
+
+        contractsTableBody.innerHTML = '';
+        contracts.slice(0, 5).forEach(c => {
+          const tr = document.createElement('tr');
+          const status = c.status || '';
+          let pillClass = 'muted';
+          if (status === 'active') pillClass = 'warning';
+          else if (status === 'completed') pillClass = 'success';
+          else if (status === 'terminated') pillClass = 'danger';
+          else if (status === 'pending') pillClass = 'warning';
+
+          const canRate = status === 'completed';
+          const canReplace = status === 'active';
+
+          tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.worker_name || ''}</td>
+            <td>${c.role || ''}</td>
+            <td>${c.start_date || ''}</td>
+            <td>${c.end_date || ''}</td>
+            <td><span class="pill pill-${pillClass}">${status}</span></td>
+            <td>
+              ${canRate ? `<button class="btn btn-secondary" data-action="rate" data-contract-id="${c.id}" data-worker-id="${c.worker_id}">Rate</button>` : ''}
+              ${canReplace ? `<button class="btn btn-secondary" data-action="replace" data-contract-id="${c.id}">Replace Worker</button>` : ''}
+            </td>
+          `;
+          contractsTableBody.appendChild(tr);
+        });
+
+        const ctx = document.getElementById('owner-contracts-chart').getContext('2d');
+        const data = [pending.length, active.length, completed.length, terminated.length];
+        if (ownerContractsChart) {
+          ownerContractsChart.data.datasets[0].data = data;
+          ownerContractsChart.update();
+        } else {
+          ownerContractsChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Pending', 'Active', 'Completed', 'Terminated'],
+              datasets: [{
+                data,
+                backgroundColor: ['#fbbf24', '#38bdf8', '#22c55e', '#ef4444']
+              }]
+            },
+            options: {
+              plugins: { legend: { display: false } },
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+      }
+
+      if (ratings && ratings.length) {
+        const sum = ratings.reduce((acc, r) => acc + (r.score || 0), 0);
+        const avg = sum / ratings.length;
+        avgRatingEl.textContent = avg.toFixed(1) + ' / 5.0';
+      } else {
+        avgRatingEl.textContent = 'N/A';
+      }
+
+      if (workers && workersTableBody) {
+        workersTableBody.innerHTML = '';
+        workers.forEach(w => {
+          const workerRatings = ratings ? ratings.filter(r => r.worker_id === w.id) : [];
+          const { average, count } = calculateAverageRating(workerRatings);
+          const fullStars = Math.round(average || 0);
+          const stars = '★★★★★'.slice(0, fullStars).padEnd(5, '☆');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${w.name || ''}</td>
+            <td>${w.location || ''}</td>
+            <td>${w.verification_level || 0}</td>
+            <td>${w.trust_score || '-'}</td>
+            <td>
+              <span class="rating-stars">${stars}</span>
+              <span class="rating-count">(${count} reviews)</span>
+            </td>
+          `;
+          workersTableBody.appendChild(tr);
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('../public_pages/login.html');
+      if (!user) return;
+
+      const { data: ownerProfile, error: ownerError } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (ownerError || !ownerProfile || ownerProfile.role !== 'owner') {
+        alert('You must be an owner to view this page.');
+        window.location.href = '../public_pages/login.html';
+        return;
+      }
+
+      await loadOwnerDashboardData(user.id);
+
+      const contractsTableBody = document.querySelector('#owner-contracts-table tbody');
+
+      contractsTableBody.addEventListener('click', async (e) => {
+        const btn = e.target;
+        const action = btn.getAttribute('data-action');
+        if (!action) return;
+        const contractId = btn.getAttribute('data-contract-id');
+
+        if (action === 'rate') {
+          const workerId = btn.getAttribute('data-worker-id');
+          const scoreStr = prompt('Rate this worker (1–5):');
+          const score = parseInt(scoreStr, 10);
+          if (!score || score < 1 || score > 5) {
+            showToast('Invalid rating.', 'error');
+            return;
+          }
+          const comment = prompt('Optional comment:') || '';
+          const { error: ratingError } = await supabaseClient.from('ratings').insert({
+            owner_id: user.id,
+            worker_id: workerId,
+            score,
+            comment
+          });
+          if (ratingError) {
+            showToast('Could not submit rating: ' + ratingError.message, 'error');
+          } else {
+            showToast('Rating submitted.', 'success');
+            await loadOwnerDashboardData(user.id);
+          }
+        } else if (action === 'replace') {
+          const confirmReplace = confirm('Mark this contract as terminated and start a replacement flow?');
+          if (!confirmReplace) return;
+          const { error: updateError } = await supabaseClient
+            .from('contracts')
+            .update({ status: 'terminated' })
+            .eq('id', contractId);
+          if (updateError) {
+            showToast('Could not update contract: ' + updateError.message, 'error');
+          } else {
+            showToast('Contract updated. You can now hire a new worker via search.', 'success');
+            await loadOwnerDashboardData(user.id);
+          }
+        }
+      });
+
+      // Realtime updates for this owner
+      supabaseClient
+        .channel('owner-contracts-' + user.id)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'contracts', filter: `owner_id=eq.${user.id}` },
+          async (payload) => {
+            await loadOwnerDashboardData(user.id);
+            const c = payload.new || payload.old;
+            showToast(`Contract ${c?.id || ''} updated: ${payload.eventType}`, 'info');
+          }
+        )
+        .subscribe();
+
+      supabaseClient
+        .channel('owner-ratings-' + user.id)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'ratings', filter: `owner_id=eq.${user.id}` },
+          async () => {
+            await loadOwnerDashboardData(user.id);
+            showToast('New rating recorded.', 'success');
+          }
+        )
+        .subscribe();
+    });
+  </script>
+</body>
+</html>
+
+
